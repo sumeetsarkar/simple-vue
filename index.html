@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Github Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <style>
+      li {
+        list-style-type: none;
+        margin-bottom: 12px;
+      }
+      .repo_avatar {
+        height:40px;
+        width:40px;
+      }
+      [v-cloak] { display:none; }
+    </style>
+  </head>
+  <body style="padding-top:32px;padding-bottom:32px">
+    <!-- App Div -->
+    <div id="app" class="container-fluid" v-cloak>
+      <div class="row">
+        <!-- Row Columns -->
+        <div class="col-md-2 col-lg-3"></div>
+        <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6">
+          <!-- Search query Input -->
+          <input v-model="query" type="text" class="form-control"
+            placeholder="Search a github repo..."
+            style="margin-bottom:32px"/>
+          <!-- Error alert -->
+          <div v-show="error" class="alert alert-danger" role="alert">
+            Error searching github repo... Please try again!
+          </div>
+          <!-- Search results -->
+          <ul id="repos" class="list-group">
+            <li v-for="item in results" >
+              <!-- Card begins -->
+              <div class="card">
+                <div class="card-block">
+                  <!-- Row 1 Begins -->
+                  <div class="row">
+                    <div class="col-md-1">
+                      <img v-bind:src="item.owner.avatar_url" alt="..."
+                    class="rounded float-left repo_avatar">
+                    </div>
+                    <div class="col-md-11">
+                      <h4 class="card-title">{{ item.full_name }}</h4>
+                      <p class="card-text">{{ item.description }}</p>
+                    </div>
+                  </div>
+                  <!-- Row 1 Ends -->
+                  <!-- Row 2 Begins -->
+                  <div class="row" style="margin-top:12px">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-11">
+                      <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+                        <button type="button" class="disabled btn btn-secondary">W - {{ item.watchers }}</button>
+                        <button type="button" class="disabled btn btn-secondary">S - {{ item.stargazers_count }}</button>
+                        <button type="button" class="disabled btn btn-secondary">F - {{ item.forks }}</button>
+                      </div>
+                      <a v-bind:href="item.clone_url" class="card-link float-right">View on Github</a>
+                    </div>
+                  </div>
+                  <!-- Row 2 Ends -->
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="col-md-2 col-lg-3"></div>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.1/vue.min.js"></script>
+    <script>
+      var vm = new Vue({
+        el: '#app',
+        data: {
+          query: '',
+          results: [],
+          error: false
+        },
+        created: function () {
+          console.log('on create');
+          this.query = 'Vue js';
+        },
+        watch: {
+          query: function () {
+            this.error = false;
+            if (this.query && this.query.length > 3) {
+              this.searchGithubRepos(this.query);
+            }
+          }
+        },
+        methods: {
+          searchGithubRepos: _.debounce(function (value) {
+            var self = this;
+            axios.get('https://api.github.com/search/repositories?sort=stars&order=desc&q=' + value)
+              .then(res => {
+                this.error = false;
+                self.results = res.data.items;
+              })
+              .catch(err => this.error = true);
+          }, 500)
+        }
+      });
+    </script>
+  </body>
+</html>
