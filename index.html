@@ -113,13 +113,23 @@
         </div>`,
       }
 
+      const waitProgress = {
+        template: `
+        <div class="progress" style="margin-bottom:32px">
+          <div class="progress-bar progress-bar-striped progress-bar-animated"
+            role="progressbar" style="width: 100%">
+          </div>
+        </div>`
+      }
+
       // local declare component
       const resultList = {
         // define template, identifies single roots
         template: `
         <div>
           <!-- Row 1 Begins -->
-          <ul id="repos" class="list-group">
+          <wait-progress v-show="isFetching"></wait-progress>
+          <ul v-show="!isFetching" class="list-group">
             <li v-for="item in results" >
               <hello message="Sumeet"></hello>
               <result-card v-bind:item="item"></result-card>
@@ -127,11 +137,15 @@
           </ul>
         </div>`,
         components: { // inject components
+          waitProgress,
           resultCard
         },
         computed: { // specify computed properties
           results () {
             return this.$store.state.results;
+          },
+          isFetching () {
+            return this.$store.state.isFetching;
           }
         }
       }
@@ -176,7 +190,10 @@
                 commit(MUTATE_RESULTS, { results: res.data.items });
                 commit(MUTATE_IS_FETCHING, { isFetching: false });
               })
-              .catch(err => commit(MUTATE_ERROR, { error: true }));
+              .catch(err => {
+                commit(MUTATE_ERROR, { error: true });
+                commit(MUTATE_IS_FETCHING, { isFetching: false });
+              });
           }
         }
       });
