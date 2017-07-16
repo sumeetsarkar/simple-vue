@@ -1,0 +1,23 @@
+{
+  "name": "simple-vue",
+  "version": "1.0.0",
+  "description": "> A very simple web app to learn Vuejs & Vuex concepts",
+  "main": "index.js",
+  "author": "Sumeet Sarkar",
+  "keywords": [
+    "vue",
+    "vuex",
+    "tutorial"
+  ],
+  "scripts": {
+    "start": "node index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:sumeetsarkar/simple-vue.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.15.3"
+  }
+}

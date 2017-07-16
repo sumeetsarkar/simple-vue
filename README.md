@@ -4,6 +4,11 @@
 
 Goal of this web app is to understand Vuejs concepts in a concise and meaningful web application. Something which is a little more than Hello World but also much less than a complicated web app :)
 
+## Getting Started
+```bash
+$ npm install && npm start
+```
+
 ## Topics covered in Vue
 1. Vue instance
 2. Lifecyle methods
