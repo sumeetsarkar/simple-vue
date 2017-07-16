@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Github Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <style>
+      li {
+        list-style-type: none;
+        margin-bottom: 12px;
+      }
+      .repo_avatar {
+        height:40px;
+        width:40px;
+      }
+      .center_div {
+        margin: 0 auto;
+      }
+      [v-cloak] { display:none; }
+    </style>
+  </head>
+  <body style="padding-top:32px;padding-bottom:32px">
+    <!-- App Div -->
+    <div id="app" class="container-fluid" v-cloak>
+      <div class="row">
+        <!-- Row Columns -->
+        <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6 center_div">
+          <!-- Search query Input -->
+          <search-input></search-input>
+          <!-- Error alert -->
+          <error-view></error-view>
+          <!-- Search results -->
+          <result-list></result-list>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.1/vue.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/2.3.1/vuex.min.js"></script>
+    <script>
+      // declare components
+      const errorView = {
+        template: `
+        <div v-show="error" class="alert alert-danger" role="alert">
+          Error searching github repo... Please try again!
+        </div>`,
+        computed: {
+          error () {
+            return this.$store.state.error;
+          }
+        }
+      }
+
+      const searchInput = {
+        template: `
+        <input
+          v-model="query"
+          type="text" class="form-control"
+          placeholder="Search a github repo..."
+          style="margin-bottom:32px"/>`,
+        data: function () {
+          return {
+            query: this.$store.state.query
+          }
+        },
+        watch: {
+          query: function (value) {
+            if (value && value.length > 2) {
+              this.searchGithubRepos(value);
+            }
+          }
+        },
+        methods: {
+          searchGithubRepos: _.debounce(function (value) {
+            this.$store.commit(MUTATE_QUERY, { query: value });
+            this.$store.dispatch(ACTION_FETCH_REPOS);
+          }, 500)
+        }
+      }
+
+      const resultCard = {
+        props: ['item'],
+        template: `
+        <div class="card">
+          <div class="card-block">
+            <!-- Row 1 Begins -->
+            <div class="row">
+              <div class="col-md-1">
+                <img v-bind:src="item.owner.avatar_url" alt="..."
+                  class="rounded float-left repo_avatar">
+              </div>
+              <div class="col-md-11">
+                <h4 class="card-title">{{ item.full_name }}</h4>
+                <p class="card-text">{{ item.description }}</p>
+              </div>
+            </div>
+            <!-- Row 1 Ends -->
+            <!-- Row 2 Begins -->
+            <div class="row" style="margin-top:12px">
+              <div class="col-md-1"></div>
+              <div class="col-md-11">
+                <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+                  <button type="button" class="disabled btn btn-secondary">W - {{ item.watchers }}</button>
+                  <button type="button" class="disabled btn btn-secondary">S - {{ item.stargazers_count }}</button>
+                  <button type="button" class="disabled btn btn-secondary">F - {{ item.forks }}</button>
+                </div>
+                <a v-bind:href="item.clone_url" class="card-link float-right">View on Github</a>
+              </div>
+            </div>
+            <!-- Row 2 Ends -->
+          </div>
+        </div>`,
+      }
+
+      const waitProgress = {
+        template: `
+        <div class="progress" style="margin-bottom:32px">
+          <div class="progress-bar progress-bar-striped progress-bar-animated"
+            role="progressbar" style="width: 100%">
+          </div>
+        </div>`
+      }
+
+      // local declare component
+      const resultList = {
+        // define template, identifies single roots
+        template: `
+        <div>
+          <!-- Row 1 Begins -->
+          <wait-progress v-show="isFetching"></wait-progress>
+          <ul v-show="!isFetching" class="list-group">
+            <li v-for="item in results" >
+              <hello message="Sumeet"></hello>
+              <result-card v-bind:item="item"></result-card>
+            </li>
+          </ul>
+        </div>`,
+        components: { // inject components
+          waitProgress,
+          resultCard
+        },
+        computed: { // specify computed properties
+          results () {
+            return this.$store.state.results;
+          },
+          isFetching () {
+            return this.$store.state.isFetching;
+          }
+        }
+      }
+
+      const MUTATE_IS_FETCHING = 'MUTATE_IS_FETCHING';
+      const MUTATE_ERROR = 'MUTATE_ERROR';
+      const MUTATE_QUERY = 'MUTATE_QUERY';
+      const MUTATE_RESULTS = 'MUTATE_RESULTS';
+      const ACTION_FETCH_REPOS = 'ACTION_FETCH_REPOS';
+
+      const store = new Vuex.Store({
+        state: {
+          // default state params
+          isFetching: false,
+          query: 'Vue',
+          results: [],
+          error: false
+        },
+        mutations: {
+          // mutations methods
+          [MUTATE_IS_FETCHING] (state, payload) {
+            state.isFetching = payload.isFetching;
+          },
+          [MUTATE_QUERY] (state, payload) {
+            state.query = payload.query;
+          },
+          [MUTATE_ERROR] (state, payload) {
+            state.error = payload.error;
+          },
+          [MUTATE_RESULTS] (state, payload) {
+            state.results = payload.results;
+          }
+        },
+        actions: {
+          // action methods
+          [ACTION_FETCH_REPOS] ({ commit, state }) {
+            const self = this;
+            commit(MUTATE_IS_FETCHING, { isFetching: true });
+            axios.get('https://api.github.com/search/repositories?sort=stars&order=desc&q=' + state.query)
+              .then(res => {
+                commit(MUTATE_ERROR, { error: false });
+                commit(MUTATE_RESULTS, { results: res.data.items });
+                commit(MUTATE_IS_FETCHING, { isFetching: false });
+              })
+              .catch(err => {
+                commit(MUTATE_ERROR, { error: true });
+                commit(MUTATE_IS_FETCHING, { isFetching: false });
+              });
+          }
+        }
+      });
+
+      // fetch initial github repos with default query
+      store.dispatch(ACTION_FETCH_REPOS);
+
+      // setup view instance
+      const vm = new Vue({
+        store,          // inject store object to all child components
+        el: '#app',     // root element
+        components: {   // inject components
+          searchInput,
+          errorView,
+          resultList
+        }
+      });
+    </script>
+  </body>
+</html>
