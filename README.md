@@ -21,4 +21,4 @@ $ npm install && npm start
 1. Vuex Store instance
 2. State
 3. Mutations
-4. Dispatch
+4. Actions
