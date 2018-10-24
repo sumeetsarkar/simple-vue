@@ -5,7 +5,7 @@ const app = new express();
 const NODE_PORT = 4000;
 
 // serve index page
-app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, './src/index.html')));
+app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, './index.html')));
 
 // start server
 app.listen(NODE_PORT, () => {
